@@ -2,17 +2,26 @@ import { createApp, close, createHttpRequest } from '@midwayjs/mock';
 import { Framework } from '@midwayjs/koa';
 
 describe('test/controller/home.test.ts', () => {
-
-  it('should POST /api/get_user', async () => {
+  it('should POST /api/user/login success', async () => {
     // create app
     const app = await createApp<Framework>();
 
-    // make request
-    const result = await createHttpRequest(app).get('/api/get_user').query({ uid: 123 });
+    // 正确
+    const result = await createHttpRequest(app).post('/api/user/login').type('json').send({ username: 'jack', password: 'redballoon' })
 
-    // use expect by jest
-    expect(result.status).toBe(200);
-    expect(result.body.message).toBe('OK');
+    expect(result.body.code).toBe(200);
+    expect(result.body.message).toBe('登录成功');
+    expect(result.body.result).toBe('success');
+
+    // 密码失败
+    const resultError = await createHttpRequest(app).post('/api/user/login').type('json').send({ username: 'jack', password: 'test' })
+    expect(resultError.body.code).toBe(400);
+    expect(resultError.body.message).toBe('账号或密码不正确');
+    expect(resultError.body.result).toBe('error');
+
+     // 密码失败
+    const resultValidate = await createHttpRequest(app).post('/api/user/login').type('json').send({ username: 'jack' })
+    expect(resultValidate.status).toBe(422);
 
     // close app
     await close(app);
